@@ -1,6 +1,13 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "stay-single", "runtimeExecutable": "node", "runtimeArgs": ["server.mjs"], "port": 4180 }
+    {
+      "name": "stay-single",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/serve.mjs"
+      ],
+      "port": 4180
+    }
   ]
 }

@@ -2,10 +2,12 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { sitePages, renderNotFound, renderManifest } from './scripts/site.mjs';
-import { siteIcons } from './scripts/icons.mjs';
+import { sitePages, renderNotFound, renderManifest } from './site.mjs';
+import { siteIcons } from './icons.mjs';
 
-const ROOT = path.dirname(fileURLToPath(import.meta.url));
+// Local preview server only. It lives in scripts/ on purpose: Vercel turns a root-level server.* file into a
+// serverless function, which would replace the static site (see vercel.json).
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const UI_DIR = path.join(ROOT, 'src', 'ui');
 const TYPES = { '.css': 'text/css; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml' };
 

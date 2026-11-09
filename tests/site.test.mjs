@@ -6,7 +6,7 @@ import { BRAND, videoIdOf } from '../src/data/brand.mjs';
 import { renderHome, renderLinks, renderNotFound, renderManifest, sitePages } from '../scripts/site.mjs';
 import { siteIcons } from '../scripts/icons.mjs';
 import { build, DIST } from '../scripts/build.mjs';
-import { createServer } from '../server.mjs';
+import { createServer } from '../scripts/serve.mjs';
 
 const pages = [['home', renderHome()], ['links', renderLinks()], ['404', renderNotFound()]];
 const withBrand = changes => ({ ...BRAND, ...changes, newsletter: { ...BRAND.newsletter, ...(changes.newsletter || {}) } });
@@ -150,6 +150,23 @@ describe('pages', () => {
   });
 });
 
+describe('deployment', () => {
+  // Vercel turns a root-level (or src/) server/app/index script into a serverless function that takes over
+  // every request, replacing the static build. The site must stay purely static.
+  it('has no file Vercel would deploy as a backend function', () => {
+    const root = path.resolve(DIST, '..');
+    const entry = /^(server|app|index)\.(c|m)?(j|t)sx?$/;
+    for (const dir of ['.', 'src']) {
+      for (const name of fs.readdirSync(path.join(root, dir))) assert.doesNotMatch(name, entry, `${dir}/${name}`);
+    }
+    assert.ok(!fs.existsSync(path.join(root, 'api')), 'no api/ folder');
+    const config = JSON.parse(fs.readFileSync(path.join(root, 'vercel.json'), 'utf8'));
+    assert.equal(config.framework, null);
+    assert.equal(config.outputDirectory, 'dist');
+    assert.equal(config.functions, undefined);
+  });
+});
+
 describe('build and server', () => {
   let server;
   let base;
@@ -196,7 +213,7 @@ describe('build and server', () => {
       assert.equal(response.status, 200, asset);
       assert.equal(response.headers.get('content-type'), type);
     }
-    for (const blocked of ['/server.mjs', '/package.json', '/src/data/brand.mjs', '/src/ui/../../server.mjs', '/nope']) {
+    for (const blocked of ['/server.mjs', '/scripts/serve.mjs', '/package.json', '/src/data/brand.mjs', '/src/ui/../../scripts/serve.mjs', '/nope']) {
       const response = await fetch(base + blocked);
       assert.equal(response.status, 404, blocked);
       assert.match(await response.text(), /Lost\./);
