@@ -27,6 +27,7 @@ function header(page) {
     ['truths', 'Truths', `${home}#truths`],
     ['play', 'Play', `${home}#play`],
     ['daily', 'Daily', `${home}#daily`],
+    ['season', 'Season', `${home}#season`],
     ['watch', 'Watch', `${home}#watch`],
     ['join', 'Join', `${home}#join`]
   ];
@@ -61,6 +62,7 @@ function footer(page, brand) {
             <li><a href="${home}#truths">Truths</a></li>
             <li><a href="${home}#play">Play</a></li>
             <li><a href="${home}#daily">Daily</a></li>
+            <li><a href="${home}#season">Season</a></li>
             <li><a href="${home}#watch">Watch</a></li>
             <li><a href="${home}#join">Join</a></li>
             <li><a href="./links.html">Links</a></li>
@@ -93,6 +95,11 @@ export function frame({ page, title, description, body, brand = BRAND }) {
   <meta property="og:description" content="${e(description)}">
   <meta name="twitter:card" content="summary">
   <link rel="icon" href="./src/ui/favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="${e(brand.name)}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap">
@@ -142,8 +149,8 @@ const pad = number => String(number).padStart(2, '0');
 
 // The data the interactive features read in the browser.
 function featureData(brand) {
-  const { handle, tiktokUrl, quotes, flags, quiz, archetypes, habits } = brand;
-  return JSON.stringify({ handle, tiktokUrl, quotes, flags, quiz, archetypes, habits }).replace(/</g, '\\u003c');
+  const { handle, tiktokUrl, quotes, flags, quiz, archetypes, habits, season, exTest } = brand;
+  return JSON.stringify({ handle, tiktokUrl, quotes, flags, quiz, archetypes, habits, season, exTest }).replace(/</g, '\\u003c');
 }
 
 function truthsSection(brand) {
@@ -167,6 +174,7 @@ function truthsSection(brand) {
           <div class="deck-controls" data-deck-controls hidden>
             <button type="button" class="deck-btn deck-skip" data-deck-skip aria-label="Next truth"><span aria-hidden="true">✕</span></button>
             <button type="button" class="deck-btn deck-share" data-deck-share>Share</button>
+            <button type="button" class="deck-btn deck-share" data-deck-image>Save image</button>
             <button type="button" class="deck-btn deck-save" data-deck-save aria-label="Save this truth" aria-pressed="false"><span aria-hidden="true">♥</span></button>
           </div>
           <p class="deck-status" role="status" aria-live="polite" data-deck-status></p>
@@ -201,7 +209,7 @@ function playSection(brand) {
             <div class="game-result" data-flags-result hidden>
               <p class="result-score"><span data-flags-score>0</span><small>/ ${brand.flags.length}</small></p>
               <p class="result-line" data-flags-verdict></p>
-              <div class="actions"><button type="button" class="btn btn-dark" data-flags-again>Play again</button><button type="button" class="btn btn-outline" data-share-flags>Share my score</button></div>
+              <div class="actions"><button type="button" class="btn btn-dark" data-flags-again>Play again</button><button type="button" class="btn btn-outline" data-share-flags>Share my score</button><button type="button" class="btn btn-outline" data-image-flags>Save image</button></div>
             </div>
           </article>
           <article class="game quiz-game" data-quiz aria-labelledby="quiz-title">
@@ -219,12 +227,25 @@ function playSection(brand) {
               <p class="quiz-type" data-quiz-type></p>
               <p data-quiz-copy></p>
               <p class="quiz-move"><strong>Your move:</strong> <span data-quiz-move></span></p>
-              <div class="actions"><button type="button" class="btn btn-dark" data-share-quiz>Share my result</button><button type="button" class="btn btn-outline" data-quiz-again>Retake</button></div>
+              <div class="actions"><button type="button" class="btn btn-dark" data-share-quiz>Share my result</button><button type="button" class="btn btn-outline" data-image-quiz>Save image</button><button type="button" class="btn btn-outline" data-quiz-again>Retake</button></div>
             </div>
           </article>
+          ${exSection(brand)}
         </div>
       </div>
     </section>`;
+}
+
+// "Should I text my ex?" Without JavaScript it reads as a plain list of questions and verdicts.
+function exSection(brand) {
+  const { questions, verdicts } = brand.exTest;
+  return `<article class="game ex-game" data-ex aria-labelledby="ex-title">
+            <div class="game-head"><p class="kicker">Game 03</p><h3 id="ex-title">Should I text my ex?</h3><p class="game-progress" data-ex-progress>A few honest questions</p></div>
+            <div class="ex-stage" data-ex-stage>
+              <ol class="ex-fallback">${Object.values(questions).map(question => `<li>${e(question.text)}</li>`).join('')}</ol>
+              <ul class="ex-fallback ex-verdicts">${Object.values(verdicts).map(verdict => `<li><strong>${e(verdict.title)}</strong> ${e(verdict.copy)}</li>`).join('')}</ul>
+            </div>
+          </article>`;
 }
 
 function dailySection(brand) {
@@ -251,7 +272,62 @@ function dailySection(brand) {
             ${brand.habits.map((habit, index) => `<label class="habit"><input type="checkbox" data-habit="${index}"><span class="habit-box" aria-hidden="true"></span><span class="habit-label">${e(habit)}</span></label>`).join('\n            ')}
           </fieldset>
           <p class="daily-status" role="status" aria-live="polite" data-daily-status></p>
+          <div class="daily-history" data-daily-history hidden>
+            <div class="daily-history-head"><p>Last 12 weeks</p><p data-daily-consistency></p></div>
+            <div class="heatmap" data-heatmap role="img"></div>
+            <p class="daily-rule">One rest day a week never breaks your streak.</p>
+          </div>
+          <div class="daily-actions" data-daily-actions hidden>
+            <button type="button" class="btn btn-primary" data-install hidden>Install the app</button>
+            <button type="button" class="btn btn-ghost" data-reminder>Add a daily reminder</button>
+            <button type="button" class="btn btn-ghost" data-image-daily>Save image</button>
+          </div>
         </div>
+      </div>
+      <dialog class="install-sheet" data-install-sheet aria-labelledby="install-title">
+        <h3 id="install-title">Add Stay Single to your home screen</h3>
+        <ol>
+          <li>Tap the <strong>Share</strong> button in Safari’s toolbar.</li>
+          <li>Choose <strong>Add to Home Screen</strong>.</li>
+          <li>Tap <strong>Add</strong>. It opens like an app and works offline.</li>
+        </ol>
+        <button type="button" class="btn btn-primary" data-install-close>Got it</button>
+      </dialog>
+    </section>`;
+}
+
+// The Single Season: 30 missions in five stages. Without JavaScript it is a readable programme.
+function seasonSection(brand) {
+  let day = 0;
+  return `    <section class="season" id="season" aria-labelledby="season-title">
+      <div class="wrap">
+        <div class="section-head" data-reveal>
+          <div><p class="eyebrow">The Single Season</p><h2 id="season-title" class="section-title" data-sort>Thirty days. One upgrade.</h2></div>
+          <p class="section-note">A 30-day challenge in four weeks — Reset, Body, Money &amp; Mind, Standards &amp; People — and a finale. Each mission takes about 15 minutes. A new one unlocks every day, and missing a day never resets anything.</p>
+        </div>
+        <div class="season-today" data-season-today hidden>
+          <div class="season-progress"><p><strong data-season-count>0</strong><span>/ 30 done</span></p><span class="season-bar"><i data-season-bar></i></span></div>
+          <div class="season-mission">
+            <p class="kicker" data-season-label>Day 01 · Reset</p>
+            <p class="season-mission-text" data-season-mission></p>
+            <div class="actions">
+              <button type="button" class="btn btn-primary" data-season-start>Start my season</button>
+              <button type="button" class="btn btn-primary" data-season-done hidden>Mark today done</button>
+              <button type="button" class="btn btn-ghost" data-image-season hidden>Save image</button>
+            </div>
+          </div>
+        </div>
+        <div class="season-weeks" data-season-weeks>
+          ${brand.season.map((stage, index) => `<div class="season-week${stage.days.length < 7 ? ' is-finale' : ''}">
+            <p class="kicker">${stage.days.length < 7 ? 'Finale' : `Week ${index + 1}`}</p>
+            <h3>${e(stage.week)}</h3>
+            <ol>${stage.days.map(mission => {
+              day += 1;
+              return `<li data-day="${day}"><span class="season-day">${pad(day)}</span><span class="season-text">${e(mission)}</span></li>`;
+            }).join('')}</ol>
+          </div>`).join('\n          ')}
+        </div>
+        <p class="season-reset" data-season-reset-row hidden><button type="button" class="text-button" data-season-reset>Restart my season</button></p>
       </div>
     </section>`;
 }
@@ -312,6 +388,8 @@ ${truthsSection(brand)}
 ${playSection(brand)}
 
 ${dailySection(brand)}
+
+${seasonSection(brand)}
 
     <section class="watch" id="watch" aria-labelledby="watch-title">
       <div class="wrap watch-inner">
@@ -399,6 +477,32 @@ export function renderNotFound(brand = BRAND) {
       </div>
     </section>`
   });
+}
+
+// Installable app: name, colours, icons, and shortcuts straight to the daily tools.
+export function renderManifest(brand = BRAND) {
+  return JSON.stringify({
+    name: brand.name,
+    short_name: brand.name,
+    description: `${brand.line} The Daily Build, the Single Season and the Single Truths.`,
+    id: './',
+    start_url: './index.html',
+    scope: './',
+    display: 'standalone',
+    orientation: 'portrait',
+    background_color: '#0E0E10',
+    theme_color: '#0E0E10',
+    icons: [
+      { src: './icons/icon-192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+      { src: './icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+      { src: './icons/maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+    ],
+    shortcuts: [
+      { name: 'The Daily Build', short_name: 'Daily', url: './index.html#daily' },
+      { name: 'The Single Season', short_name: 'Season', url: './index.html#season' },
+      { name: 'Single Truths', short_name: 'Truths', url: './index.html#truths' }
+    ]
+  }, null, 2);
 }
 
 export function sitePages(brand = BRAND) {

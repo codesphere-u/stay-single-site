@@ -384,6 +384,12 @@ for (const stage of document.querySelectorAll('[data-embed]')) {
   });
 }
 
+/* ---------- Installable app: works offline once visited ---------- */
+
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || ['localhost', '127.0.0.1'].includes(location.hostname))) {
+  addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+
 /* ---------- Small touches ---------- */
 
 // Buttons lean toward the pointer.

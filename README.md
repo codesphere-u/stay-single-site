@@ -36,11 +36,26 @@ Everything the site says lives in [`src/data/brand.mjs`](src/data/brand.mjs):
 | Red Flag / Green Flag scenarios | `flags` — `verdict` is `red` or `green`, plus a one-line `take` |
 | "What kind of single are you?" | `quiz` (each answer names an archetype) and `archetypes` |
 | The Daily Build check-in | `habits` |
+| The Single Season (30-day challenge) | `season` — five stages, 30 missions in total |
+| "Should I text my ex?" | `exTest` — questions lead to another question or a verdict |
 | Instagram, YouTube, X, Threads… | `socials` — fill in `url`; empty ones are hidden everywhere |
 | Specific TikToks to feature | `featuredVideos` — full video URLs |
 | Newsletter / community sign-up | `newsletter.action` — your provider's form URL; until then the site shows "The list opens soon" |
 
 Restart `npm start` after editing so the pages regenerate.
+
+## Built to come back to
+
+- **Installable app.** The site has a web app manifest, generated icons (`scripts/icons.mjs`, plain Node) and a
+  service worker (`src/sw.js`), so visitors can add it to their home screen and use it offline after one visit.
+  iPhone visitors get step-by-step "Add to Home Screen" instructions.
+- **Daily reminder.** The Daily Build offers a calendar file with a daily 8pm reminder — no notifications needed.
+- **Forgiving streaks.** One rest day a week never breaks a Daily Build streak, and a 12-week heatmap and 30-day
+  consistency score show progress beyond the streak. Missing a Single Season day never resets anything.
+- **Story cards.** Truths, quiz and flag results, streaks, Season progress and ex-test verdicts can be saved as
+  1080×1920 images (`src/ui/storycard.mjs`) — shared straight to TikTok or Instagram on phones.
+
+Everything a visitor saves stays in their own browser.
 
 ## How the TikTok videos load
 

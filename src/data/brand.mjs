@@ -100,6 +100,85 @@ export const BRAND = {
     standard: { title: 'The Standard-Setter', copy: 'You know what you want, and you don’t do guesswork. Clear is kind, and you live by it.', move: 'Write down three non-negotiables. Keep them kind and clear.' }
   },
 
+  // The Single Season: a 30-day challenge, about 15 minutes a day. One mission unlocks each day;
+  // missed days never reset anything.
+  season: [
+    {
+      week: 'Reset',
+      days: [
+        'Clean your room top to bottom. Clear space, clear head.',
+        'Mute or archive one chat that drains your energy.',
+        'Same bedtime tonight, and the phone sleeps outside the bedroom.',
+        'Walk for 30 minutes without headphones. Just think.',
+        'Cook one real meal from scratch.',
+        'Write down three things you want this season to change.',
+        'Rest day: do something purely for fun, guilt-free.'
+      ]
+    },
+    {
+      week: 'Body',
+      days: [
+        'Do a full-body workout. Twenty minutes counts.',
+        'Drink two litres of water today and track it.',
+        'Stretch for 15 minutes before bed.',
+        'Get 10 minutes of daylight within an hour of waking.',
+        'Swap one takeaway for a meal you cook yourself.',
+        'Try a new sport, class or running route.',
+        'Rest day: sleep in, then take a long walk.'
+      ]
+    },
+    {
+      week: 'Money & Mind',
+      days: [
+        'Look at where your money went last month. Every bit of it.',
+        'Set up an automatic saving, however small.',
+        'Read 20 pages of a book.',
+        'One hour of deep work on a skill, phone in another room.',
+        'Cancel one subscription you don’t use.',
+        'Write a one-page plan for the next 90 days.',
+        'Rest day: no spending and no scrolling until noon.'
+      ]
+    },
+    {
+      week: 'Standards & People',
+      days: [
+        'Write down three non-negotiables. Keep them kind and clear.',
+        'Call a friend or family member you’ve been meaning to.',
+        'Upgrade one thing: a haircut, a fit, a fragrance.',
+        'Say no to one thing that doesn’t serve you.',
+        'Do something kind for someone and expect nothing back.',
+        'Take yourself on a solo date: a meal or a film you’d love.',
+        'Rest day: look back at what changed this month.'
+      ]
+    },
+    {
+      week: 'Finale',
+      days: [
+        'Write a letter to yourself to open in 30 days.',
+        'Celebrate. Share your season, then pick your next challenge.'
+      ]
+    }
+  ],
+
+  // "Should I text my ex?" — a few yes/no questions, then an honest verdict.
+  exTest: {
+    start: 'time',
+    // Each answer leads to another question or to a verdict (the two use different names).
+    questions: {
+      time: { text: 'Is it after 11pm?', yes: 'sleep', no: 'practical' },
+      practical: { text: 'Is it about something practical — their things, a bill, a shared pet?', yes: 'logistics', no: 'feelings' },
+      feelings: { text: 'Are you hoping it will make them feel something?', yes: 'notes', no: 'moved' },
+      moved: { text: 'Has it been three months or more of no contact, and have you genuinely moved on?', yes: 'closure', no: 'wait' }
+    },
+    verdicts: {
+      sleep: { title: 'Put the phone down.', copy: 'Nothing good gets typed after 11pm. Drink some water, go to sleep, and see if it still matters at 9am.', send: false },
+      logistics: { title: 'Fine. Keep it logistical.', copy: 'One short, kind message about the practical thing. No “by the way”, no follow-up feelings.', send: true },
+      notes: { title: 'That’s a feeling, not a reason.', copy: 'Write it in your notes app instead. Read it tomorrow. You’ll be glad you didn’t send it.', send: false },
+      closure: { title: 'A short “hope you’re well” is fine.', copy: 'If it’s sincere and closed, go ahead — and expect nothing back. That’s what moved on looks like.', send: true },
+      wait: { title: 'Not yet.', copy: 'Give it more time. Train, call a friend, build something. Future you will thank you.', send: false }
+    }
+  },
+
   // The Daily Build: a daily check-in kept only on the visitor's own device.
   habits: ['Trained my body', 'Read 10 pages', 'Put money aside', 'Drank enough water', 'Cooked a real meal', 'Didn’t text the ex'],
 

@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { BRAND, videoIdOf } from '../src/data/brand.mjs';
-import { renderHome, renderLinks, renderNotFound, sitePages } from '../scripts/site.mjs';
+import { renderHome, renderLinks, renderNotFound, renderManifest, sitePages } from '../scripts/site.mjs';
+import { siteIcons } from '../scripts/icons.mjs';
 import { build, DIST } from '../scripts/build.mjs';
 import { createServer } from '../server.mjs';
 
@@ -90,6 +91,44 @@ describe('pages', () => {
     assert.equal(BRAND.habits.length, 6);
   });
 
+  it('has a 30-day Season and an ex test where every answer leads somewhere', () => {
+    assert.equal(BRAND.season.flatMap(stage => stage.days).length, 30);
+    const { start, questions, verdicts } = BRAND.exTest;
+    assert.ok(questions[start]);
+    assert.deepEqual(Object.keys(questions).filter(key => key in verdicts), [], 'question and verdict names never collide');
+    const reached = new Set();
+    const walk = id => {
+      if (verdicts[id]) return reached.add(id);
+      assert.ok(questions[id], `unknown step ${id}`);
+      walk(questions[id].yes);
+      walk(questions[id].no);
+    };
+    walk(start);
+    assert.deepEqual([...reached].sort(), Object.keys(verdicts).sort(), 'every verdict is reachable');
+    const home = renderHome();
+    assert.equal(home.match(/<li data-day="\d+">/g).length, 30);
+    assert.match(home, /<section class="season" id="season"/);
+    assert.match(home, /data-ex-stage/);
+    for (const hook of ['data-heatmap', 'data-reminder', 'data-install', 'data-deck-image', 'data-image-quiz', 'data-image-flags', 'data-image-daily']) assert.ok(home.includes(hook), hook);
+  });
+
+  it('is installable: manifest, icons and app metadata', () => {
+    const manifest = JSON.parse(renderManifest());
+    assert.equal(manifest.name, 'Stay Single');
+    assert.equal(manifest.display, 'standalone');
+    assert.ok(manifest.icons.some(icon => icon.sizes === '512x512' && icon.purpose === 'maskable'));
+    assert.ok(manifest.shortcuts.some(shortcut => shortcut.url.endsWith('#daily')));
+    for (const [, html] of pages) {
+      assert.match(html, /<link rel="manifest" href="\.\/manifest\.webmanifest">/);
+      assert.match(html, /<link rel="apple-touch-icon" href="\.\/icons\/apple-touch-icon\.png">/);
+    }
+    for (const [name, png] of siteIcons()) {
+      assert.equal(png.subarray(1, 4).toString('ascii'), 'PNG', name);
+      const size = Number(name.match(/(\d+)\.png$/)?.[1] || 180);
+      assert.equal(png.readUInt32BE(16), size, `${name} width`);
+    }
+  });
+
   it('renders the features as usable content before any script runs', () => {
     const home = renderHome();
     assert.equal(home.match(/<li class="truth truth-\d" data-index=/g).length, BRAND.quotes.length);
@@ -123,7 +162,7 @@ describe('build and server', () => {
   after(() => new Promise(resolve => server.close(resolve)));
 
   it('writes every page and the assets to dist/', () => {
-    for (const name of ['index.html', 'links.html', '404.html', 'src/ui/brand.css', 'src/ui/nav.css', 'src/ui/features.css', 'src/ui/site.mjs', 'src/ui/features.mjs', 'src/ui/motion.mjs', 'src/ui/favicon.svg']) {
+    for (const name of ['index.html', 'links.html', '404.html', 'manifest.webmanifest', 'sw.js', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/maskable-512.png', 'icons/apple-touch-icon.png', 'src/ui/brand.css', 'src/ui/nav.css', 'src/ui/features.css', 'src/ui/site.mjs', 'src/ui/features.mjs', 'src/ui/storycard.mjs', 'src/ui/motion.mjs', 'src/ui/favicon.svg']) {
       assert.ok(fs.existsSync(path.join(DIST, name)), name);
     }
   });
@@ -136,6 +175,19 @@ describe('build and server', () => {
       assert.equal(await response.text(), fs.readFileSync(path.join(DIST, name), 'utf8'), name);
     }
     assert.equal((await fetch(`${base}/`)).status, 200);
+  });
+
+  it('serves the app files, and the service worker only pre-caches files that exist', async () => {
+    for (const [asset, type] of [['/manifest.webmanifest', 'application/manifest+json; charset=utf-8'], ['/sw.js', 'text/javascript; charset=utf-8'], ['/icons/icon-512.png', 'image/png']]) {
+      const response = await fetch(base + asset);
+      assert.equal(response.status, 200, asset);
+      assert.equal(response.headers.get('content-type'), type);
+    }
+    const worker = await (await fetch(base + '/sw.js')).text();
+    for (const file of [...worker.matchAll(/'\.\/([^']*)'/g)].map(match => match[1])) {
+      const response = await fetch(`${base}/${file}`);
+      assert.equal(response.status, 200, `pre-cached ${file || '/'}`);
+    }
   });
 
   it('serves assets with the right types and nothing outside src/ui', async () => {

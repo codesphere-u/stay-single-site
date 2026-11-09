@@ -64,7 +64,7 @@
 }
 .deck-btn:hover { transform: scale(1.07); border-color: var(--bone); }
 .deck-btn:active { transform: scale(.95); }
-.deck-share { width: auto; min-width: 110px; padding: 0 22px; border-radius: 999px; font: 700 .92rem/1 var(--sans); }
+.deck-share { width: auto; min-width: 110px; padding: 0 22px; border-radius: 999px; font: 700 .92rem/1 var(--sans); white-space: nowrap; }
 .deck-save { border-color: var(--ember); background: var(--ember); color: #160803; }
 .deck-save[aria-pressed="true"] { border-color: var(--bone); background: var(--bone); color: var(--ember); }
 .deck-status { min-height: 1.5em; color: var(--smoke); font-size: .9rem; text-align: center; }
@@ -190,6 +190,10 @@
   .deck-wrap { justify-items: center; }
 }
 @media (max-width: 520px) {
+  /* Four deck buttons must fit a 320px-wide phone. */
+  .deck-controls { gap: 8px; }
+  .deck-btn { width: 56px; height: 56px; }
+  .deck-share { min-width: 0; padding: 0 16px; font-size: .84rem; }
   .daily-top { gap: 18px; }
   .daily-ring { width: 104px; }
 }
@@ -205,3 +209,94 @@
 @keyframes feature-in { from { opacity: 0; transform: translateY(16px) scale(.98); } }
 @keyframes feedback-pop { from { opacity: 0; scale: .6; } }
 @keyframes toast-in { from { opacity: 0; translate: -50% 16px; } }
+
+/* ---------- Game 03: Should I text my ex? ---------- */
+.ex-game { grid-column: 1 / -1; min-height: 0; background: #201d24; color: var(--bone); }
+.ex-game .kicker { color: var(--ember); }
+.ex-game .game-progress { color: var(--smoke); }
+.ex-fallback { display: grid; gap: 8px; margin: 18px 0 0; padding-left: 20px; color: var(--mist); }
+.ex-verdicts { padding-left: 0; list-style: none; }
+.ex-stage[data-enhanced] .ex-fallback { display: none; }
+.ex-trail { display: flex; flex-wrap: wrap; gap: 6px; margin: 22px 0 0; padding: 0; list-style: none; }
+.ex-trail li { padding: 5px 11px; border: 1px solid #ffffff21; border-radius: 999px; color: var(--smoke); font: 600 .72rem/1.3 var(--mono); }
+.ex-question { max-width: 26ch; margin: 22px 0 24px; font: 800 clamp(1.6rem, 3vw, 2.6rem)/1.15 var(--sans); letter-spacing: -.03em; }
+.ex-answers { display: flex; flex-wrap: wrap; gap: 12px; }
+.ex-answers .btn { min-width: 140px; }
+.ex-verdict { display: grid; gap: 14px; margin-top: 22px; }
+.ex-badge { justify-self: start; padding: 7px 14px; border-radius: 999px; font: 700 .76rem/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.ex-badge.is-send { background: #3ad47e; color: #04160b; }
+.ex-badge.is-hold { background: #ff5252; color: #1d0505; }
+.ex-verdict-title { font: 400 clamp(2.6rem, 6vw, 5rem)/.9 var(--display); text-transform: uppercase; }
+.ex-verdict > p:not(.ex-badge, .ex-verdict-title) { max-width: 52ch; color: var(--mist); font-size: 1.05rem; }
+.ex-game .btn-outline { border-color: #ffffff40; color: var(--bone); }
+.ex-game .btn-outline:hover { border-color: var(--bone); background: #ffffff0d; }
+
+/* ---------- Daily Build: history, rule, actions ---------- */
+.daily-history { margin-top: 22px; padding-top: 18px; border-top: 1px solid #ffffff14; }
+.daily-history-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; margin-bottom: 12px; color: var(--smoke); font: 600 .72rem/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; }
+.daily-history-head p:last-child { color: var(--bone); }
+.heatmap { display: grid; grid-template-rows: repeat(7, 14px); grid-auto-columns: 14px; grid-auto-flow: column; gap: 4px; }
+.heatmap i { border-radius: 3px; background: #ffffff10; }
+.heatmap i[data-level="1"] { background: #ff5a1f40; }
+.heatmap i[data-level="2"] { background: #ff5a1f8c; }
+.heatmap i[data-level="3"] { background: var(--ember); }
+.heatmap i.is-today { outline: 1.5px solid var(--bone); outline-offset: 1px; }
+.daily-rule { margin-top: 10px; color: var(--smoke); font-size: .84rem; }
+.daily-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.daily-actions .btn { min-height: 46px; padding: 0 18px; font-size: .86rem; }
+
+.install-sheet { width: min(460px, calc(100vw - 32px)); padding: 26px; border: 1px solid #ffffff1f; border-radius: 28px; background: #17161a; color: var(--bone); box-shadow: 0 40px 90px #000c; }
+.install-sheet::backdrop { background: #0e0e10b3; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.install-sheet h3 { font: 400 2rem/1 var(--display); text-transform: uppercase; }
+.install-sheet ol { display: grid; gap: 10px; margin: 18px 0 22px; padding-left: 22px; color: var(--mist); }
+
+/* ---------- The Single Season ---------- */
+.season { padding-block: clamp(84px, 11vw, 150px); background: radial-gradient(50% 50% at 100% 0%, #ff5a1f1f, transparent 60%), #141317; color: var(--bone); }
+.season .section-note { color: var(--mist); }
+.season-today {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: clamp(24px, 4vw, 60px);
+  margin-bottom: 28px; padding: clamp(24px, 3vw, 40px); border-radius: 32px; background: var(--ember); color: var(--ink);
+}
+.season-progress p { display: flex; align-items: baseline; gap: 10px; }
+.season-progress strong { font: 400 clamp(4rem, 8vw, 6.4rem)/.85 var(--display); }
+.season-progress span:not(.season-bar) { font: 600 .8rem/1 var(--mono); }
+.season-bar { display: block; width: clamp(160px, 18vw, 240px); height: 10px; margin-top: 14px; overflow: hidden; border-radius: 999px; background: #0e0e1026; }
+.season-bar i { display: block; height: 100%; background: var(--ink); transform-origin: left center; scale: var(--season, 0) 1; transition: scale .7s cubic-bezier(.2,.8,.3,1); }
+.season-mission .kicker { color: var(--ink); font: 600 .74rem/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.season-mission-text { max-width: 30ch; margin: 10px 0 20px; font: 800 clamp(1.5rem, 2.6vw, 2.2rem)/1.15 var(--sans); letter-spacing: -.03em; }
+.season-today .btn-ghost { border-color: #0e0e1059; color: var(--ink); }
+.season-today .btn-ghost:hover { border-color: var(--ink); background: #0e0e100f; }
+.season-weeks { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.season-week { padding: 22px 18px; border: 1px solid #ffffff14; border-radius: 26px; background: #ffffff07; }
+.season-week.is-finale { grid-column: 1 / -1; }
+.season-week.is-finale ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.season-week .kicker { color: var(--ember); font: 600 .72rem/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+.season-week h3 { margin: 8px 0 14px; font: 400 2rem/1 var(--display); text-transform: uppercase; }
+.season-week ol { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.season-week li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 10px; padding: 10px; border-radius: 14px; color: var(--mist); font-size: .92rem; line-height: 1.45; }
+.season-day { color: var(--smoke); font: 600 .74rem/1.9 var(--mono); }
+.season-item { display: contents; color: inherit; font: inherit; text-align: left; }
+.season-week li:has(.season-item) { cursor: pointer; transition: background-color .2s ease; }
+.season-week li:has(.season-item):hover { background: #ffffff0d; }
+.season-week li:has(:focus-visible) { outline: 2px solid var(--ember); outline-offset: 1px; }
+.season-item:focus-visible { outline: none; }
+.season-week li.is-locked { opacity: .36; }
+.season-week li.is-today { background: #ff5a1f1f; color: var(--bone); box-shadow: inset 0 0 0 1px #ff5a1f66; }
+.season-week li.is-done { color: var(--bone); }
+.season-week li.is-done .season-day { color: var(--ember); }
+.season-week li.is-done .season-text { text-decoration: line-through; text-decoration-color: #ff5a1fb3; }
+.season-reset { display: flex; justify-content: flex-end; margin-top: 16px; }
+.text-button { min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--smoke); cursor: pointer; font: 600 .82rem/1 var(--mono); text-decoration: underline; text-underline-offset: 4px; }
+.text-button:hover { color: var(--bone); }
+
+@media (max-width: 1100px) {
+  .season-weeks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .season-weeks,.season-week.is-finale ol { grid-template-columns: minmax(0, 1fr); }
+  .season-today { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .ex-question,.ex-verdict { animation: feature-in .55s cubic-bezier(.16,1,.3,1) both; }
+  .season-week li.is-done .season-day { animation: feedback-pop .45s cubic-bezier(.3,1.6,.5,1) both; }
+}
