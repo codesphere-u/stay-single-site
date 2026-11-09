@@ -1,0 +1,111 @@
+/* Navigation (adapted from the codesphere-portfolio dock and orb).
+   Larger screens: hidden at the very top so the opening is seen in full, then an orb once the page scrolls;
+   keyboard focus brings the dock back at any time. Small screens: a Menu island at the top, then the orb.
+   The orb and the Menu island open the same card. Only the dock, orb and card take pointer events. */
+.ss-header {
+  --orb-size: 54px; --orb-edge: var(--gutter);
+  --glass: #0e0e10c2; --glass-rule: #ffffff22; --glass-ink: #f3eee6; --glass-muted: #b7b1a8;
+  position: sticky; top: 0; z-index: 40; height: var(--nav-h); margin-bottom: calc(var(--nav-h) * -1); pointer-events: none;
+}
+.header-inner { position: relative; display: flex; align-items: center; justify-content: flex-end; height: 100%; }
+.ss-header ul { margin: 0; padding: 0; list-style: none; }
+.ss-header :is(a, button) { scroll-margin-top: -96px; }
+
+.ss-header:not(.is-card) .dock,.nav-toggle {
+  pointer-events: auto; border: 1px solid var(--glass-rule); border-radius: 999px; background: var(--glass); color: var(--glass-ink);
+  -webkit-backdrop-filter: blur(14px) saturate(150%); backdrop-filter: blur(14px) saturate(150%);
+  box-shadow: 0 14px 34px -16px #000b, inset 0 1px 0 #ffffff12;
+}
+.dock { position: relative; padding: 5px; }
+.nav-pages { position: relative; display: flex; align-items: center; gap: 2px; }
+.nav-pages::before {
+  content: ""; position: absolute; z-index: 0; top: 0; bottom: 0; left: var(--hl-x, 0); width: var(--hl-w, 0);
+  border-radius: 999px; background: #ffffff1c; opacity: var(--hl-o, 0); pointer-events: none;
+}
+.nav-pages > li { position: relative; z-index: 1; }
+.ss .nav-pages > li > a {
+  display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 8px 17px; border-radius: 999px;
+  color: var(--glass-muted); text-decoration: none; font: 650 .88rem/1.2 var(--sans); transition: color .25s ease;
+}
+.ss .nav-pages > li > a:is(:hover, :focus-visible, [aria-current], .is-current) { color: var(--glass-ink); }
+.nav-pages > li > a:is([aria-current], .is-current)::before { content: ""; flex: none; width: 5px; height: 5px; border-radius: 50%; background: var(--ember); }
+.ss .nav-pages > .nav-follow > a { margin-left: 6px; padding-inline: 20px; background: var(--ember); color: #160803; font-weight: 750; }
+.ss .nav-pages > .nav-follow > a:is(:hover, :focus-visible) { background: var(--ember-hi); color: #160803; }
+
+.nav-toggle { display: none; cursor: pointer; font: 700 .9rem/1 var(--sans); }
+.nav-toggle:not([hidden]) { display: flex; align-items: center; gap: 10px; min-height: 50px; padding: 0 20px; }
+.nav-toggle span { width: 7px; height: 7px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg) translateY(-2px); }
+.nav-toggle[aria-expanded="true"] span { transform: rotate(225deg) translate(-1px, -1px); }
+
+@media (min-width: 761px) {
+  .ss-header.is-hidden:not(.is-card):not(:focus-within) .dock { opacity: 0; translate: 0 -14px; pointer-events: none; }
+}
+
+/* ---------- The orb ---------- */
+.ss-header.is-orb .nav-toggle { visibility: hidden; }
+.ss-header.is-orb:not(.is-card) .dock { visibility: hidden; }
+.nav-orb {
+  position: absolute; top: 50%; right: var(--orb-edge); z-index: 2; width: var(--orb-size); height: var(--orb-size); margin-top: calc(var(--orb-size) / -2);
+  padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; visibility: hidden; -webkit-tap-highlight-color: transparent;
+}
+.ss-header.is-orb .nav-orb { visibility: visible; pointer-events: auto; }
+.ss .nav-orb:focus-visible { outline-offset: 7px; }
+.nav-orb-core { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; background: var(--ink); color: var(--bone); box-shadow: 0 0 0 1px #ffffff26, 0 14px 30px #0008; }
+.nav-orb:hover .nav-orb-core,.is-open .nav-orb-core { background: var(--ember); color: #160803; }
+.nav-orb-ring { position: absolute; inset: -5px; width: calc(100% + 10px); height: calc(100% + 10px); overflow: visible; rotate: -90deg; pointer-events: none; }
+.nav-orb-ring circle { fill: none; stroke: #ff5a1f33; stroke-width: 2; }
+.nav-orb-ring .nav-orb-progress { stroke: var(--ember); stroke-linecap: round; stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--reading-progress, 0)); }
+.nav-orb-lines { position: relative; width: 18px; height: 10px; }
+.nav-orb-lines i { position: absolute; left: 0; right: 0; height: 1.8px; border-radius: 2px; background: currentColor; }
+.nav-orb-lines i:first-child { top: 0; }
+.nav-orb-lines i:last-child { bottom: 0; left: 7px; }
+.nav-orb:hover .nav-orb-lines i:last-child { left: 0; }
+.is-open .nav-orb-lines i:first-child { transform: translateY(4.1px) rotate(45deg); }
+.is-open .nav-orb-lines i:last-child { left: 0; transform: translateY(-4.1px) rotate(-45deg); }
+
+/* ---------- The menu card ---------- */
+.ss-header.is-card .dock {
+  position: absolute; inset: calc(100% + 10px) var(--orb-edge) auto auto; pointer-events: auto;
+  width: min(380px, calc(100vw - 24px)); max-height: calc(100dvh - 110px); overflow: auto; overscroll-behavior: contain;
+  padding: 20px 12px 12px; border-radius: 28px; background: var(--ink); color: var(--bone);
+  box-shadow: 0 0 0 1px #ffffff1c, 0 30px 70px #000a;
+}
+.ss-header.is-card .dock::before {
+  content: "Stay Single."; content: "Stay Single." / "";
+  display: block; padding: 0 12px 10px; color: var(--ember); font: 400 1.5rem/1 var(--display); text-transform: uppercase;
+}
+.ss-header.is-card .nav-pages { display: grid; gap: 2px; counter-reset: card-nav; }
+.ss-header.is-card .nav-pages::before { display: none; }
+.ss-header.is-card .nav-pages > li { counter-increment: card-nav; }
+.ss-header.is-card .nav-pages > li > a {
+  align-items: baseline; gap: 14px; min-height: 58px; padding: 10px 12px; border-radius: 16px; color: var(--bone);
+  font: 400 clamp(2rem, 6vw, 2.4rem)/1 var(--display); text-transform: uppercase;
+}
+.ss-header.is-card .nav-pages > li > a::before {
+  content: counter(card-nav, decimal-leading-zero); width: auto; height: auto; border-radius: 0; background: none;
+  color: #ff5a1fb3; font: 600 .66rem/1 var(--mono); translate: 0 -.9em;
+}
+.ss-header.is-card .nav-pages > li > a:hover { background: #ffffff0d; translate: 6px 0; }
+.ss-header.is-card .nav-pages > li > a:is([aria-current], .is-current) { color: var(--ember); background: #ff5a1f14; }
+.ss-header.is-card .nav-pages > .nav-follow > a {
+  justify-content: center; align-items: center; min-height: 54px; margin: 10px 0 0; border-radius: 999px;
+  background: var(--ember); color: #160803; font: 750 1rem/1 var(--sans); text-transform: none;
+}
+.ss-header.is-card .nav-pages > .nav-follow > a::before { content: none; }
+.ss-header.is-card .nav-pages > .nav-follow > a:hover { translate: none; background: var(--ember-hi); }
+
+@media (max-width: 760px) {
+  .ss-header { --orb-size: 50px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .nav-pages::before { transition: left .5s cubic-bezier(.3,1.25,.45,1), width .5s cubic-bezier(.3,1.25,.45,1), opacity .25s ease; }
+  .dock,.nav-toggle { transition: opacity .35s ease, translate .45s cubic-bezier(.2,.8,.3,1); }
+  .ss-header.is-card:not(.is-orb) .dock { animation: card-in .32s cubic-bezier(.2,.8,.3,1) both; }
+  .nav-orb-core { transition: background-color .25s, color .25s, translate .5s cubic-bezier(.2,.9,.3,1.4); }
+  .nav-orb-lines i { transition: transform .45s cubic-bezier(.7,0,.2,1), left .3s cubic-bezier(.2,.8,.3,1); }
+  .nav-orb-progress { transition: stroke-dashoffset .12s linear; }
+  .nav-toggle span { transition: transform .3s cubic-bezier(.2,.8,.3,1); }
+  .ss-header.is-card .nav-pages > li > a { transition: background-color .2s, color .2s, translate .35s cubic-bezier(.2,.8,.3,1); }
+}
+@keyframes card-in { from { opacity: 0; transform: translateY(-8px) scale(.98); } }

@@ -1,0 +1,15 @@
+{
+  "name": "stay-single-site",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Stay Single (@stay_single_men) — brand site and link hub. Zero dependencies.",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node server.mjs",
+    "test": "node --test tests/site.test.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
