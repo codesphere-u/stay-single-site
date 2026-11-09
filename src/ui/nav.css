@@ -1,6 +1,6 @@
 /* Navigation (adapted from the codesphere-portfolio dock and orb).
-   Larger screens: hidden at the very top so the opening is seen in full, then an orb once the page scrolls;
-   keyboard focus brings the dock back at any time. Small screens: a Menu island at the top, then the orb.
+   The dock (a Menu island on small screens) sits at the top; past the opening its links fly into an orb at its
+   right end while its glass shrinks into the circle. Scrolling back up grows the dock out again.
    The orb and the Menu island open the same card. Only the dock, orb and card take pointer events. */
 .ss-header {
   --orb-size: 54px; --orb-edge: var(--gutter);
@@ -37,13 +37,14 @@
 .nav-toggle span { width: 7px; height: 7px; border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(45deg) translateY(-2px); }
 .nav-toggle[aria-expanded="true"] span { transform: rotate(225deg) translate(-1px, -1px); }
 
-@media (min-width: 761px) {
-  .ss-header.is-hidden:not(.is-card):not(:focus-within) .dock { opacity: 0; translate: 0 -14px; pointer-events: none; }
-}
 
 /* ---------- The orb ---------- */
 .ss-header.is-orb .nav-toggle { visibility: hidden; }
-.ss-header.is-orb:not(.is-card) .dock { visibility: hidden; }
+.ss-header.is-orb:not(.is-card) .dock {
+  visibility: hidden;
+  /* Half the orb's size as the radius is already a circle, and keeps the in-between frames a clean pill. */
+  clip-path: inset(calc(50% - var(--orb-size) / 2) 0 calc(50% - var(--orb-size) / 2) calc(100% - var(--orb-size)) round calc(var(--orb-size) / 2));
+}
 .nav-orb {
   position: absolute; top: 50%; right: var(--orb-edge); z-index: 2; width: var(--orb-size); height: var(--orb-size); margin-top: calc(var(--orb-size) / -2);
   padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer; visibility: hidden; -webkit-tap-highlight-color: transparent;
@@ -100,7 +101,10 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .nav-pages::before { transition: left .5s cubic-bezier(.3,1.25,.45,1), width .5s cubic-bezier(.3,1.25,.45,1), opacity .25s ease; }
-  .dock,.nav-toggle { transition: opacity .35s ease, translate .45s cubic-bezier(.2,.8,.3,1); }
+  .nav-toggle { transition: opacity .35s ease, translate .45s cubic-bezier(.2,.8,.3,1); }
+  /* At rest the clip reaches well past the dock; on the way to the orb it shrinks to the dock's right end. */
+  .ss-header:not(.is-card) .dock { clip-path: inset(-40px -80px -100vh -480px); transition: clip-path .55s cubic-bezier(.75,0,.2,1); }
+  .ss-header.is-orb:not(.is-card) .dock { transition: clip-path .5s cubic-bezier(.75,0,.2,1), visibility 0s .52s; }
   .ss-header.is-card:not(.is-orb) .dock { animation: card-in .32s cubic-bezier(.2,.8,.3,1) both; }
   .nav-orb-core { transition: background-color .25s, color .25s, translate .5s cubic-bezier(.2,.9,.3,1.4); }
   .nav-orb-lines i { transition: transform .45s cubic-bezier(.7,0,.2,1), left .3s cubic-bezier(.2,.8,.3,1); }

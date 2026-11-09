@@ -13,14 +13,14 @@ const withBrand = changes => ({ ...BRAND, ...changes, newsletter: { ...BRAND.new
 describe('pages', () => {
   it('share the shell: header, one h1, main, footer, brand styles and script', () => {
     for (const [name, html] of pages) {
-      assert.match(html, /<header class="ss-header is-hidden" data-header>/, name);
+      assert.match(html, /<header class="ss-header" data-header>/, name);
       assert.match(html, /aria-label="Main navigation"/, name);
       assert.equal(html.match(/<h1[\s>]/g)?.length, 1, `${name} has exactly one h1`);
       assert.match(html, /<main id="main" tabindex="-1">/, name);
       assert.match(html, /<footer class="ss-footer">/, name);
       assert.match(html, /src\/ui\/brand\.css/, name);
       assert.match(html, /<script type="module" src="\.\/src\/ui\/site\.mjs"><\/script>/, name);
-      assert.match(html, /<noscript><style>\.ss-header\.is-hidden \.dock/, name);
+      assert.doesNotMatch(html, /is-hidden/, name);
       assert.doesNotMatch(html, /undefined|\[object Object\]/, name);
     }
   });
@@ -73,6 +73,38 @@ describe('pages', () => {
     assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
   });
 
+  it('has well-formed feature content', () => {
+    assert.ok(BRAND.quotes.length >= 24, 'at least 24 truths');
+    assert.equal(new Set(BRAND.quotes).size, BRAND.quotes.length, 'truths are unique');
+    assert.ok(BRAND.flags.length >= 6);
+    for (const flag of BRAND.flags) {
+      assert.ok(['red', 'green'].includes(flag.verdict), flag.scenario);
+      assert.ok(flag.take.length > 10, flag.scenario);
+    }
+    assert.ok(BRAND.flags.some(f => f.verdict === 'red') && BRAND.flags.some(f => f.verdict === 'green'));
+    for (const item of BRAND.quiz) {
+      assert.equal(item.answers.length, 4, item.question);
+      for (const [, type] of item.answers) assert.ok(BRAND.archetypes[type], `${item.question} → ${type}`);
+    }
+    for (const type of Object.keys(BRAND.archetypes)) assert.ok(BRAND.quiz.some(item => item.answers.some(([, t]) => t === type)), `${type} is reachable`);
+    assert.equal(BRAND.habits.length, 6);
+  });
+
+  it('renders the features as usable content before any script runs', () => {
+    const home = renderHome();
+    assert.equal(home.match(/<li class="truth truth-\d" data-index=/g).length, BRAND.quotes.length);
+    assert.match(home, /<q data-today>/);
+    assert.equal(home.match(/<li class="flag-card" data-verdict="(red|green)">/g).length, BRAND.flags.length);
+    assert.equal(home.match(/<details class="flag-answer"><summary>Our take<\/summary>/g).length, BRAND.flags.length);
+    assert.equal(home.match(/<fieldset class="quiz-step"/g).length, BRAND.quiz.length);
+    assert.equal(home.match(/<input type="checkbox" data-habit=/g).length, BRAND.habits.length);
+    for (const id of ['truths', 'play', 'daily', 'watch', 'join']) assert.match(home, new RegExp(`<section class="[^"]+" id="${id}"`), id);
+    assert.match(home, /<script type="module" src="\.\/src\/ui\/features\.mjs"><\/script>/);
+    assert.doesNotMatch(renderLinks(), /features\.mjs/);
+    const json = JSON.parse(home.match(/<script type="application\/json" id="ss-data">([\s\S]*?)<\/script>/)[1]);
+    assert.deepEqual(json.quotes, BRAND.quotes);
+  });
+
   it('keeps copy positive', () => {
     const copy = JSON.stringify(BRAND).toLowerCase();
     for (const word of ['women are', 'females', 'gold digger', 'hate']) assert.ok(!copy.includes(word), word);
@@ -91,7 +123,7 @@ describe('build and server', () => {
   after(() => new Promise(resolve => server.close(resolve)));
 
   it('writes every page and the assets to dist/', () => {
-    for (const name of ['index.html', 'links.html', '404.html', 'src/ui/brand.css', 'src/ui/nav.css', 'src/ui/site.mjs', 'src/ui/motion.mjs', 'src/ui/favicon.svg']) {
+    for (const name of ['index.html', 'links.html', '404.html', 'src/ui/brand.css', 'src/ui/nav.css', 'src/ui/features.css', 'src/ui/site.mjs', 'src/ui/features.mjs', 'src/ui/motion.mjs', 'src/ui/favicon.svg']) {
       assert.ok(fs.existsSync(path.join(DIST, name)), name);
     }
   });

@@ -24,12 +24,13 @@ function stamp(brand, className = '') {
 function header(page) {
   const home = page === 'home' ? '' : './index.html';
   const links = [
-    ['manifesto', 'Manifesto', `${home}#manifesto`],
+    ['truths', 'Truths', `${home}#truths`],
+    ['play', 'Play', `${home}#play`],
+    ['daily', 'Daily', `${home}#daily`],
     ['watch', 'Watch', `${home}#watch`],
-    ['join', 'Join', `${home}#join`],
-    ['links', 'Links', './links.html']
+    ['join', 'Join', `${home}#join`]
   ];
-  return `<header class="ss-header is-hidden" data-header>
+  return `<header class="ss-header" data-header>
     <div class="wrap header-inner">
       <button class="nav-toggle" type="button" aria-controls="ss-nav" aria-expanded="false" hidden>Menu <span aria-hidden="true"></span></button>
       <button class="nav-orb" type="button" aria-controls="ss-nav" aria-expanded="false" aria-label="Open navigation" inert>
@@ -57,6 +58,9 @@ function footer(page, brand) {
         <nav class="footer-nav" aria-label="Footer">
           <ul>
             <li><a href="${home}#manifesto">Manifesto</a></li>
+            <li><a href="${home}#truths">Truths</a></li>
+            <li><a href="${home}#play">Play</a></li>
+            <li><a href="${home}#daily">Daily</a></li>
             <li><a href="${home}#watch">Watch</a></li>
             <li><a href="${home}#join">Join</a></li>
             <li><a href="./links.html">Links</a></li>
@@ -93,8 +97,7 @@ export function frame({ page, title, description, body, brand = BRAND }) {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap">
   <link rel="stylesheet" href="./src/ui/brand.css">
-  <link rel="stylesheet" href="./src/ui/nav.css">
-  <noscript><style>.ss-header.is-hidden .dock { opacity: 1; translate: none; pointer-events: auto; }</style></noscript>
+  <link rel="stylesheet" href="./src/ui/nav.css">${page === 'home' ? '\n  <link rel="stylesheet" href="./src/ui/features.css">' : ''}
 </head>
 <body class="ss ss-${page}">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -103,7 +106,7 @@ export function frame({ page, title, description, body, brand = BRAND }) {
 ${body}
   </main>
   ${footer(page, brand)}
-  <script type="module" src="./src/ui/site.mjs"></script>
+  <script type="module" src="./src/ui/site.mjs"></script>${page === 'home' ? '\n  <script type="module" src="./src/ui/features.mjs"></script>' : ''}
 </body>
 </html>
 `;
@@ -135,6 +138,124 @@ function joinBlock(brand, { compact = false } = {}) {
       </form>`;
 }
 
+const pad = number => String(number).padStart(2, '0');
+
+// The data the interactive features read in the browser.
+function featureData(brand) {
+  const { handle, tiktokUrl, quotes, flags, quiz, archetypes, habits } = brand;
+  return JSON.stringify({ handle, tiktokUrl, quotes, flags, quiz, archetypes, habits }).replace(/</g, '\\u003c');
+}
+
+function truthsSection(brand) {
+  const total = brand.quotes.length;
+  return `    <section class="truths" id="truths" aria-labelledby="truths-title">
+      <div class="wrap truths-inner">
+        <div class="truths-copy" data-reveal>
+          <p class="eyebrow">Single Truths</p>
+          <h2 id="truths-title" class="section-title" data-sort>Swipe right on yourself.</h2>
+          <p class="section-note">${total} truths for men who are single on purpose. Swipe right to save one, left for the next — or use the buttons and your arrow keys.</p>
+          <p class="deck-meta" data-deck-meta hidden><span data-deck-count>01 / ${pad(total)}</span><button type="button" class="saved-open" data-saved-open>Saved <span data-saved-count>0</span></button></p>
+        </div>
+        <div class="deck-wrap">
+          <ol class="deck" data-deck aria-label="Single Truths">
+            ${brand.quotes.map((quote, index) => `<li class="truth truth-${index % 3}" data-index="${index}">
+              <p class="truth-mark">Stay Single<b>.</b></p>
+              <blockquote>${e(quote)}</blockquote>
+              <p class="truth-num">No. ${pad(index + 1)}</p>
+            </li>`).join('\n            ')}
+          </ol>
+          <div class="deck-controls" data-deck-controls hidden>
+            <button type="button" class="deck-btn deck-skip" data-deck-skip aria-label="Next truth"><span aria-hidden="true">✕</span></button>
+            <button type="button" class="deck-btn deck-share" data-deck-share>Share</button>
+            <button type="button" class="deck-btn deck-save" data-deck-save aria-label="Save this truth" aria-pressed="false"><span aria-hidden="true">♥</span></button>
+          </div>
+          <p class="deck-status" role="status" aria-live="polite" data-deck-status></p>
+        </div>
+      </div>
+      <dialog class="saved" data-saved aria-labelledby="saved-title">
+        <div class="saved-head"><h3 id="saved-title">Your saved truths</h3><button type="button" class="saved-close" data-saved-close aria-label="Close">✕</button></div>
+        <ol class="saved-list" data-saved-list></ol>
+        <p class="saved-empty" data-saved-empty>Nothing saved yet. Swipe right on a truth to keep it here.</p>
+      </dialog>
+    </section>`;
+}
+
+function playSection(brand) {
+  const label = verdict => (verdict === 'red' ? 'Red flag' : 'Green flag');
+  return `    <section class="play" id="play" aria-labelledby="play-title">
+      <div class="wrap">
+        <div class="section-head" data-reveal>
+          <div><p class="eyebrow">Play</p><h2 id="play-title" class="section-title" data-sort>Test yourself.</h2></div>
+          <p class="section-note">Two quick ones. Call the flags, then find out what kind of single you are.</p>
+        </div>
+        <div class="play-grid">
+          <article class="game flags-game" data-flags aria-labelledby="flags-title">
+            <div class="game-head"><p class="kicker">Game 01</p><h3 id="flags-title">Red flag or green flag?</h3><p class="game-progress" data-flags-progress>${brand.flags.length} scenarios</p></div>
+            <ol class="flag-list">
+              ${brand.flags.map(flag => `<li class="flag-card" data-verdict="${flag.verdict}">
+                <p class="flag-scenario">${e(flag.scenario)}</p>
+                <div class="flag-actions" data-flag-actions hidden><button type="button" class="flag-btn flag-red" data-call="red">Red flag</button><button type="button" class="flag-btn flag-green" data-call="green">Green flag</button></div>
+                <details class="flag-answer"><summary>Our take</summary><p><strong>${label(flag.verdict)}.</strong> ${e(flag.take)}</p></details>
+              </li>`).join('\n              ')}
+            </ol>
+            <div class="game-result" data-flags-result hidden>
+              <p class="result-score"><span data-flags-score>0</span><small>/ ${brand.flags.length}</small></p>
+              <p class="result-line" data-flags-verdict></p>
+              <div class="actions"><button type="button" class="btn btn-dark" data-flags-again>Play again</button><button type="button" class="btn btn-outline" data-share-flags>Share my score</button></div>
+            </div>
+          </article>
+          <article class="game quiz-game" data-quiz aria-labelledby="quiz-title">
+            <div class="game-head"><p class="kicker">Game 02</p><h3 id="quiz-title">What kind of single are you?</h3><p class="game-progress" data-quiz-progress>${brand.quiz.length} questions</p></div>
+            <form class="quiz-form" data-quiz-form>
+              ${brand.quiz.map((item, index) => `<fieldset class="quiz-step" data-step="${index}">
+                <legend>${e(item.question)}</legend>
+                ${item.answers.map(([answer, type]) => `<label class="quiz-option"><input type="radio" name="q${index}" value="${type}" required><span>${e(answer)}</span></label>`).join('\n                ')}
+              </fieldset>`).join('\n              ')}
+              <button type="submit" class="btn btn-dark quiz-submit">See my result</button>
+              <noscript><p class="game-note">Turn on JavaScript to see your result.</p></noscript>
+            </form>
+            <div class="game-result quiz-result" data-quiz-result hidden>
+              <p class="kicker">You’re</p>
+              <p class="quiz-type" data-quiz-type></p>
+              <p data-quiz-copy></p>
+              <p class="quiz-move"><strong>Your move:</strong> <span data-quiz-move></span></p>
+              <div class="actions"><button type="button" class="btn btn-dark" data-share-quiz>Share my result</button><button type="button" class="btn btn-outline" data-quiz-again>Retake</button></div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>`;
+}
+
+function dailySection(brand) {
+  return `    <section class="daily" id="daily" aria-labelledby="daily-title">
+      <div class="wrap daily-inner">
+        <div class="daily-copy" data-reveal>
+          <p class="eyebrow">The Daily Build</p>
+          <h2 id="daily-title" class="section-title" data-sort>Win the day.</h2>
+          <p class="section-note">Six small wins. Tick them off as you go. Your progress stays on this device and resets at midnight — four or more keeps your streak alive.</p>
+        </div>
+        <div class="daily-card" data-daily>
+          <div class="daily-top">
+            <div class="daily-ring" aria-hidden="true">
+              <svg viewBox="0 0 120 120" focusable="false"><circle class="ring-track" cx="60" cy="60" r="52" pathLength="1"/><circle class="ring-fill" cx="60" cy="60" r="52" pathLength="1"/></svg>
+              <p class="ring-label"><strong data-daily-done>0</strong><span>/ ${brand.habits.length}</span></p>
+            </div>
+            <div class="daily-stats">
+              <p><span class="daily-stat" data-daily-streak>0</span><span class="daily-stat-label">day streak</span></p>
+              <p class="daily-date" data-daily-date>Today</p>
+            </div>
+          </div>
+          <fieldset class="daily-list">
+            <legend class="sort-readable">Today’s build</legend>
+            ${brand.habits.map((habit, index) => `<label class="habit"><input type="checkbox" data-habit="${index}"><span class="habit-box" aria-hidden="true"></span><span class="habit-label">${e(habit)}</span></label>`).join('\n            ')}
+          </fieldset>
+          <p class="daily-status" role="status" aria-live="polite" data-daily-status></p>
+        </div>
+      </div>
+    </section>`;
+}
+
 export function renderHome(brand = BRAND) {
   const marqueeRun = brand.themes.map(theme => `<span class="marquee-item">${e(theme)}</span><span class="marquee-dot"></span>`).join('');
   return frame({
@@ -148,6 +269,7 @@ export function renderHome(brand = BRAND) {
           <div class="hero-copy">
             <p class="hero-line">${e(brand.line)}</p>
             <p class="hero-intro">${e(brand.intro)}</p>
+            <p class="today"><span class="today-label">Today’s truth</span><q data-today>${e(brand.quotes[0])}</q></p>
           </div>
           <div class="actions">
             <a class="btn btn-primary" href="${e(brand.tiktokUrl)}" data-magnetic>Follow on TikTok <span class="arrow" aria-hidden="true">↗</span></a>
@@ -168,6 +290,8 @@ export function renderHome(brand = BRAND) {
       </div>
     </section>
 
+${truthsSection(brand)}
+
     <section class="pillars" aria-labelledby="pillars-title">
       <div class="wrap">
         <div class="section-head" data-reveal>
@@ -184,6 +308,10 @@ export function renderHome(brand = BRAND) {
         </ol>
       </div>
     </section>
+
+${playSection(brand)}
+
+${dailySection(brand)}
 
     <section class="watch" id="watch" aria-labelledby="watch-title">
       <div class="wrap watch-inner">
@@ -219,7 +347,8 @@ export function renderHome(brand = BRAND) {
         ${joinBlock(brand)}
       </div>
       <span class="join-dot" aria-hidden="true"></span>
-    </section>`
+    </section>
+    <script type="application/json" id="ss-data">${featureData(brand)}</script>`
   });
 }
 
@@ -231,6 +360,7 @@ export function renderLinks(brand = BRAND) {
           </a></li>`;
   const list = [
     item({ href: brand.tiktokUrl, title: 'Follow on TikTok', note: `@${brand.handle} · watch the latest clips`, primary: true }),
+    item({ href: './index.html#truths', title: 'Swipe the Single Truths', note: 'A new truth every day — save your favourites' }),
     item({ href: './index.html#join', title: newsletterOpen(brand) ? brand.newsletter.button : 'Join the list', note: newsletterOpen(brand) ? 'The weekly single-man playbook' : 'Opening soon — get notified on TikTok' }),
     ...others.slice(0, 5).map(({ label, url, note }) => item({ href: url, title: label, note })),
     item({ href: './index.html', title: 'Visit the site', note: 'The manifesto, the videos and the list' })

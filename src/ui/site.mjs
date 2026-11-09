@@ -20,9 +20,10 @@ const toggle = header.querySelector('.nav-toggle');
 const orb = header.querySelector('.nav-orb');
 const orbCore = orb.querySelector('.nav-orb-core');
 
-// The orb appears as soon as the page scrolls, with a little hysteresis so it never flickers.
-const ORB_AT = 32;
-const BAR_AT = 12;
+// Scroll offsets (px): the dock condenses into the orb past the opening and returns near the top,
+// with some hysteresis so it never flickers at the boundary.
+const ORB_AT = 160;
+const BAR_AT = 100;
 
 let orbMode = false;
 let open = false;
@@ -34,6 +35,14 @@ const centerOf = node => {
   return { x: box.left + box.width / 2, y: box.top + box.height / 2, r: box.width / 2 };
 };
 const settle = nodes => nodes.forEach(node => node.getAnimations().forEach(animation => animation.cancel()));
+// What is on screen at the top: the dock's links on larger screens, the Menu island on small ones.
+const barItems = () => (compact.matches ? [toggle] : navItems()).filter(node => node.getClientRects().length > 0);
+// Nearest first, so the dock folds into the orb from its right end outward.
+function byDistance(nodes, target) {
+  return nodes
+    .map(node => { const point = centerOf(node); return { node, dx: target.x - point.x, dy: target.y - point.y }; })
+    .sort((a, b) => Math.hypot(a.dx, a.dy) - Math.hypot(b.dx, b.dy));
+}
 
 // The links show as a card when opened from the orb, or from the Menu island on small screens.
 function syncCard() {
@@ -43,7 +52,6 @@ function syncCard() {
 
 function render() {
   header.classList.toggle('is-orb', orbMode);
-  header.classList.toggle('is-hidden', !orbMode);
   header.classList.toggle('is-open', open);
   syncCard();
   for (const control of [toggle, orb]) control.setAttribute('aria-expanded', String(open));
@@ -55,30 +63,32 @@ function render() {
 }
 
 function toOrb(animate) {
-  settle([toggle, orbCore]);
-  const from = animate && motion.matches && compact.matches ? centerOf(toggle) : null;
-  const target = centerOf(orb);
+  settle([...barItems(), toggle, orbCore]);
+  const moves = animate && motion.matches ? byDistance(barItems(), centerOf(orb)) : [];
   orbMode = true;
   open = false;
   render();
   placeHighlight(null);
   if (!animate || !motion.matches) return;
-  if (from) {
-    toggle.animate([
-      { visibility: 'visible', opacity: 1, transform: 'none' },
-      { visibility: 'visible', opacity: 0, transform: `translate(${target.x - from.x}px, ${target.y - from.y}px) scale(.3)` }
-    ], { duration: 380, easing: 'cubic-bezier(.6,0,.75,.3)' });
-  }
+  // Each item winds up a touch, then is pulled into the orb.
+  moves.forEach(({ node, dx, dy }, index) => {
+    node.animate([
+      { visibility: 'visible', opacity: 1, transform: 'none', filter: 'blur(0)' },
+      { visibility: 'visible', opacity: 1, transform: `translate(${dx * -0.05}px, ${dy * -0.05}px) scale(1.04)`, offset: 0.3 },
+      { visibility: 'visible', opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(.1)`, filter: 'blur(4px)' }
+    ], { duration: 480, delay: index * 40, easing: 'cubic-bezier(.6,0,.75,.3)', fill: 'backwards' });
+  });
   orbCore.animate([
     { transform: 'scale(0) rotate(-140deg)' },
     { transform: 'scale(1.14) rotate(8deg)', offset: 0.68 },
     { transform: 'none' }
-  ], { duration: 560, delay: from ? 180 : 0, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' });
+  ], { duration: 560, delay: moves.length ? 300 : 0, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' });
 }
 
 function toBar(animate) {
   closeMenu({ instant: true });
-  settle([toggle, orbCore]);
+  settle([...navItems(), toggle, orbCore]);
+  const target = centerOf(orb);
   orbMode = false;
   render();
   restHighlight();
@@ -87,10 +97,13 @@ function toBar(animate) {
     { visibility: 'visible', opacity: 1, transform: 'none' },
     { visibility: 'visible', opacity: 0, transform: 'scale(0) rotate(120deg)' }
   ], { duration: 280, easing: 'cubic-bezier(.5,0,.75,0)' });
-  if (compact.matches) {
-    toggle.animate([{ opacity: 0, transform: 'translateY(-10px) scale(.9)' }, { opacity: 1, transform: 'none' }],
-      { duration: 500, delay: 120, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
-  }
+  // The links spill back out of the orb into the dock.
+  byDistance(barItems(), target).forEach(({ node, dx, dy }, index) => {
+    node.animate([
+      { opacity: 0, transform: `translate(${dx}px, ${dy}px) scale(.1)`, filter: 'blur(4px)' },
+      { opacity: 1, transform: 'none', filter: 'blur(0)' }
+    ], { duration: 620, delay: 140 + index * 45, easing: 'cubic-bezier(.16,1,.3,1)', fill: 'backwards' });
+  });
 }
 
 function cardGeometry() {

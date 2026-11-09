@@ -32,6 +32,10 @@ Everything the site says lives in [`src/data/brand.mjs`](src/data/brand.mjs):
 | Words on the moving band | `themes` |
 | The scroll-lit manifesto (and which words glow ember) | `manifesto`, `manifestoKeys` |
 | The three pillars | `pillars` |
+| Single Truths deck and the daily "Truth of the day" | `quotes` |
+| Red Flag / Green Flag scenarios | `flags` — `verdict` is `red` or `green`, plus a one-line `take` |
+| "What kind of single are you?" | `quiz` (each answer names an archetype) and `archetypes` |
+| The Daily Build check-in | `habits` |
 | Instagram, YouTube, X, Threads… | `socials` — fill in `url`; empty ones are hidden everywhere |
 | Specific TikToks to feature | `featuredVideos` — full video URLs |
 | Newsletter / community sign-up | `newsletter.action` — your provider's form URL; until then the site shows "The list opens soon" |

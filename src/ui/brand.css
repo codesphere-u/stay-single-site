@@ -43,7 +43,8 @@ body.ss::after {
 .eyebrow::before { content: ""; flex: none; width: 28px; height: 2px; background: currentColor; }
 .eyebrow-live::before { display: none; }
 .live-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ember); }
-.section-title { font: 400 clamp(3.4rem, 9vw, 8rem)/.86 var(--display); text-transform: uppercase; letter-spacing: .005em; margin-top: 14px; }
+/* Anton's tall capitals rise above the line box, so titles need clear space under their label. */
+.section-title { font: 400 clamp(3.4rem, 9vw, 8rem)/.9 var(--display); text-transform: uppercase; letter-spacing: .005em; margin-top: 26px; }
 .section-head { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 18px 40px; margin-bottom: clamp(32px, 4.5vw, 60px); }
 .section-note { max-width: 36ch; color: #4a4640; font-size: 1.02rem; }
 
